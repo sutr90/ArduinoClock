@@ -2,6 +2,8 @@
 #include <MaxMatrix.h>
 #include <avr/pgmspace.h>
 #include <util/atomic.h>
+#include <Wire.h>
+#include "rtc.h"
 
 #include "characters.h"
 #include "codes.h"
@@ -58,6 +60,8 @@ void setup() {
   analogReference(DEFAULT);
 
   analogWrite(5, 127);
+
+  Wire.begin();
 }
 
 void loop() {
