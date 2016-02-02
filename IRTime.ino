@@ -4,6 +4,7 @@
 #include <util/atomic.h>
 
 #include "characters.h"
+#include "codes.h"
 
 int RECV_PIN = 11;
 
@@ -73,21 +74,21 @@ bool buttonPressed(byte pin) {
     My_Decoder.decode();
 
     switch (My_Decoder.value) {
-      case 0x61D6D827: {
+      case VOL_UP: {
           if (valueSetup == S_HOURS) {
             h++;
           } else if (valueSetup == S_MINUTES) {
             m++;
           }
         } break;//UP
-      case 0x61D6F807: {
+      case VOL_DOWN: {
           if (valueSetup == S_HOURS) {
             h--;
           } else if (valueSetup == S_MINUTES) {
             m--;
           }
         } break;//DOWN
-      case 0x61D6E817: return true; //SETUP
+      case RETURN: return true; //SETUP
     }
   }
   return false;
