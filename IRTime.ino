@@ -20,7 +20,6 @@ IRdecode My_Decoder;
 
 int mode, valueSetup;
 
-
 int data = 10;    // 8, DIN pin of MAX7219 module
 int load = 9;    // 9, CS pin of MAX7219 module
 int clock = 8;  // 10, CLK pin of MAX7219 module
@@ -35,12 +34,6 @@ byte buffer[10];
 
 // active sentenses
 char string1[] = "00:00      ";
-
-volatile int s = 0;
-volatile unsigned int m = 0;
-volatile unsigned int h = 0;
-volatile boolean interrupt = false;
-
 
 void setup() {
   My_Receiver.enableIRIn();
@@ -71,16 +64,16 @@ bool buttonPressed() {
     switch (My_Decoder.value) {
       case VOL_UP: {
           if (valueSetup == S_HOURS) {
-            h++;
+            hours++;
           } else if (valueSetup == S_MINUTES) {
-            m++;
+            minutes++;
           }
         } break;//UP
       case VOL_DOWN: {
           if (valueSetup == S_HOURS) {
-            h--;
+            hours--;
           } else if (valueSetup == S_MINUTES) {
-            m--;
+            minutes--;
           }
         } break;//DOWN
       case RETURN: return true; //SETUP
@@ -117,23 +110,24 @@ void modeSetup() {
     } else if (valueSetup == S_MINUTES) {
       mode = M_CLOCK;
       valueSetup = S_HOURS;
+      setDS3231time(minutes, hours);
     }
   } 
 
-  if (m == 60) {
-    m = 0;
+  if (minutes == 60) {
+    minutes = 0;
   }
 
-  if (m == 255) {
-    m = 59;
+  if (minutes == 255) {
+    minutes = 59;
   }
 
-  if (h == 24) {
-    h = 0;
+  if (hours == 24) {
+    hours = 0;
   }
 
-  if (h == 255) {
-    h = 23;
+  if (hours == 255) {
+    hours = 23;
   }
 
   updateDisplay();
