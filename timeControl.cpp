@@ -1,46 +1,35 @@
 #include "timeControl.h"
 
+#include <MaxMatrix.h>
 #include <IRLib.h>
-#include <LedControl.h>
-
 #include "Arduino.h"
+#include "characters.h"
 
-LedControl lc = LedControl(5, 3, 4, 1);
-
-byte numbers[10][5] = {
-  {7, 5, 5, 5, 7},
-  {2, 2, 2, 2, 2},
-  {7, 1, 7, 4, 7},
-  {7, 1, 7, 1, 7},
-  {5, 5, 7, 1, 1},
-  {7, 4, 7, 1, 7},
-  {7, 4, 7, 5, 7},
-  {7, 1, 1, 1, 1},
-  {7, 5, 7, 5, 7},
-  {7, 5, 7, 1, 7}
-};
+MaxMatrix mm(5, 4, 3, 2); // define module
+byte buffer[10];
 
 byte *nr, hours, minutes;
+void printChar(char c, byte x) {
+  if (c < 32) return;
+  c -= 32;
+  memcpy_P(buffer, CH + 7 * c, 7);
+  mm.writeSprite(x, 0, buffer);
+}
 
-void showNumber() {
+
+void showNumber(timeControl::State currentState) {
   byte left, right;
   left = (*nr) / 10;
   right = (*nr) % 10;
-  
-  int i, number;
-  for (i = 0; i < 5; i++) {
-    if (left > 10) {
-      number = numbers[right][i];
-    } else if (right > 10) {
-      number = numbers[left][i] << 4;
-    }
-    else {
-      number = (numbers[left][i] << 4) | numbers[right][i];
-    }
-    lc.setRow(0, i, number);
-  }
-}
 
+  printChar(left + 32, 0);
+  printChar(right + 32, 4);
+  if(currentState == 0 || currentState == 2){
+    mm.setDot(0, 7, 1);
+    mm.setDot(7, 7, 1);
+  }
+  
+}
 
 const timeControl::State timeControl::fsmTable[5][4] = {
 	/*         evt_down,         evt_empty,        evt_select,            evt_up, */
@@ -137,14 +126,13 @@ timeControl::timeControl(IRrecv &rec, IRdecode &dec) : My_Receiver(rec), My_Deco
 	currentState = st_setupTime;
 	currentEvent = evt_none;
 
-  lc.shutdown(0,false);
-  lc.setIntensity(0,2);
-  lc.clearDisplay(0);
+  mm.init(); // module initialize
+  mm.setIntensity(4); // dot matix intensity 0-15
 }
 
 void timeControl::loop() {
   lastEvent = currentEvent;
-  showNumber();
+  showNumber(currentState);
 	pollEvents();
 	currentMillis = millis();
 	if (evtChanged || currentMillis - previousMillis > interval) {

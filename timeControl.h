@@ -7,12 +7,12 @@ class timeControl{
 public:
 	timeControl(IRrecv &rec, IRdecode &dec);
 	void loop();
+
+  typedef enum {st_changeHours, st_changeMinutes, st_setHours, st_setMinutes, st_setupTime, } State;
+  State currentState;
 private:
 	typedef enum {evt_down, evt_empty, evt_select, evt_up, evt_none} Event;
 	Event currentEvent, lastEvent;
-
-	typedef enum {st_changeHours, st_changeMinutes, st_setHours, st_setMinutes, st_setupTime, } State;
-	State currentState;
 
   IRrecv &My_Receiver;
   IRdecode &My_Decoder;

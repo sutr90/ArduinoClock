@@ -1,4 +1,4 @@
-#include <LedControl.h>
+#include <MaxMatrix.h>
 #include <IRLib.h>
 #include "timeControl.h"
 
