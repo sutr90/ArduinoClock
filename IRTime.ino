@@ -1,10 +1,8 @@
 #include <IRLib.h>
 #include <MaxMatrix.h>
-#include <avr/pgmspace.h>
-#include <util/atomic.h>
 #include <Wire.h>
-#include "rtc.h"
 
+#include "rtc.h"
 #include "characters.h"
 #include "codes.h"
 
