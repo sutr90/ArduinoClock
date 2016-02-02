@@ -5,6 +5,6 @@
 
 void setDS3231time(byte minute, byte hour);
 
-void readDS3231time(byte *second, byte *minute, byte *hour);
+void readDS3231time(byte *minute, byte *hour);
 
 #endif

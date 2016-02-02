@@ -27,7 +27,7 @@ int clock = 8;  // 10, CLK pin of MAX7219 module
 
 int maxInUse = 2;    //change this variable to set how many MAX7219's you'll use
 
-int hours, minutes, masterClock;
+byte hours, minutes;
 
 MaxMatrix mm(data, load, clock, maxInUse); // define module
 
@@ -51,11 +51,6 @@ void setup() {
 
   mode = M_SETUP;
   valueSetup = S_HOURS;
-
-  attachInterrupt(0, clockCounter, RISING);
-  analogReference(DEFAULT);
-
-  analogWrite(5, 127);
 
   Wire.begin();
 }
@@ -94,30 +89,23 @@ bool buttonPressed() {
   return false;
 }
 
-void updateClock() {
+void updateDisplay() {
+  byte h1 = hours / 10;
+  byte h2 = hours % 10;
 
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-  {
-    hours = h;
-    minutes = m;
-  }
-
-  int h1 = hours / 10;
-  int h2 = hours % 10;
-
-  int m1 = minutes / 10;
-  int m2 = minutes % 10;
+  byte m1 = minutes / 10;
+  byte m2 = minutes % 10;
 
   string1[0] = h1 + '0';
   string1[1] = h2 + '0';
   string1[3] = m1 + '0';
   string1[4] = m2 + '0';
-
 }
 
 void modeClock() {
   delay(4000);
-  updateClock();
+  readDS3231time(&minutes, &hours);
+  updateDisplay();
   mm.shiftLeft(false, true);
   printStringWithShift(string1, 75);
 }
@@ -148,7 +136,7 @@ void modeSetup() {
     h = 23;
   }
 
-  updateClock();
+  updateDisplay();
 
   if (valueSetup == S_HOURS) {
     printChar(string1[0], 0);
@@ -186,31 +174,5 @@ void printStringWithShift(char* s, int shift_speed) {
   while (*s != 0) {
     printCharWithShift(*s, shift_speed);
     s++;
-  }
-}
-
-
-void clockCounter()      // called by interrupt
-{
-  masterClock ++;        // with each clock rise add 1 to masterclock count
-  if (masterClock == 977) // 490Hz reached
-  {
-    s++;          // after one 490Hz cycle add 1 second ;)
-    masterClock = 0;     // Reset after 1 second is reached
-
-    if (s == 60) {
-      s = 0;
-      m++;
-    }
-
-    if (m == 60) {
-      m = 0;
-      h++;
-      s++;
-    }
-
-    if (h == 24) {
-      h = 0;
-    }
   }
 }
