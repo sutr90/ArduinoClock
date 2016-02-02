@@ -13,10 +13,6 @@ int RECV_PIN = 11;
 IRrecv My_Receiver(RECV_PIN);
 IRdecode My_Decoder;
 
-#define BTN_SETUP 1
-#define BTN_UP 2
-#define BTN_DOWN 3
-
 #define M_CLOCK 1
 #define M_SETUP 2
 #define S_MINUTES 4
@@ -72,7 +68,7 @@ void loop() {
   }
 }
 
-bool buttonPressed(byte pin) {
+bool buttonPressed() {
   if (My_Receiver.GetResults(&My_Decoder)) {
     My_Receiver.resume();
     My_Decoder.decode();
@@ -127,7 +123,7 @@ void modeClock() {
 }
 
 void modeSetup() {
-  if (buttonPressed(BTN_SETUP)) {
+  if (buttonPressed()) {
     if (valueSetup == S_HOURS) {
       valueSetup = S_MINUTES;
     } else if (valueSetup == S_MINUTES) {
