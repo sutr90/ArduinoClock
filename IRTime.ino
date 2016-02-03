@@ -6,7 +6,7 @@
 #include "characters.h"
 #include "codes.h"
 
-int RECV_PIN = 11;
+int RECV_PIN = 9;
 
 IRrecv My_Receiver(RECV_PIN);
 IRdecode My_Decoder;
@@ -18,9 +18,9 @@ IRdecode My_Decoder;
 
 int mode, valueSetup;
 
-int data = 10;    // 8, DIN pin of MAX7219 module
-int load = 9;    // 9, CS pin of MAX7219 module
-int clock = 8;  // 10, CLK pin of MAX7219 module
+int data = 12;    // 8, DIN pin of MAX7219 module
+int load = 11;    // 9, CS pin of MAX7219 module
+int clock = 10;  // 10, CLK pin of MAX7219 module
 
 int maxInUse = 2;    //change this variable to set how many MAX7219's you'll use
 
