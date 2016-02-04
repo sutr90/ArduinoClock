@@ -1,7 +1,9 @@
 #include <IRLib.h>
 #include <MaxMatrix.h>
 #include <Wire.h>
-
+#include <OneWire.h>
+#include <DallasTemperature.h>
+ 
 #include "rtc.h"
 #include "characters.h"
 #include "codes.h"
@@ -31,7 +33,13 @@ MaxMatrix mm(data, load, clock, maxInUse); // define module
 byte buffer[10];
 
 // active sentenses
-char string1[] = "00:00      ";
+char string1[] = "00:00 -99C    ";
+
+OneWire oneWire(3);
+signed char temperature;
+ 
+// Pass our oneWire reference to Dallas Temperature.
+DallasTemperature sensors(&oneWire);
 
 void setup() {
   My_Receiver.enableIRIn();
@@ -44,6 +52,7 @@ void setup() {
   valueSetup = S_HOURS;
 
   Wire.begin();
+  sensors.begin();
 }
 
 void loop() {
@@ -91,14 +100,33 @@ void updateDisplay() {
   string1[1] = h2 + '0';
   string1[3] = m1 + '0';
   string1[4] = m2 + '0';
+
+  if(temperature < 0){
+    string1[6] = '-';
+    temperature *= -1;
+  } else {
+    string1[6] = ' ';
+  }
+
+  byte t1 = temperature / 10;
+  byte t2 = temperature % 10;
+
+  string1[7] = t1 + '0';
+  string1[8] = t2 + '0';
 }
 
 void modeClock() {
   delay(4000);
   readDS3231time(&minutes, &hours);
+  readTemp(&temperature);
   updateDisplay();
   mm.shiftLeft(false, true);
   printStringWithShift(string1, 75);
+}
+
+void readTemp(signed char *temp){
+  sensors.requestTemperatures();
+  *temp = (signed char) sensors.getTempCByIndex(0);
 }
 
 void modeSetup() {
