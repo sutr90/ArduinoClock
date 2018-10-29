@@ -1,24 +1,18 @@
-#include <IRLib.h>
 #include <MaxMatrix.h>
 #include <Wire.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
- 
-#include "rtc.h"
+
+#include <DCF77.h>
+#include <TimeLib.h>
+
 #include "characters.h"
-#include "codes.h"
 
-int RECV_PIN = 9;
+#define DCF_PIN 2           // Connection pin to DCF 77 device
+#define DCF_INTERRUPT 0    // Interrupt number associated with pin
 
-IRrecv My_Receiver(RECV_PIN);
-IRdecode My_Decoder;
-
-#define M_CLOCK 1
-#define M_SETUP 2
-#define S_MINUTES 4
-#define S_HOURS 8
-
-int mode, valueSetup;
+time_t time;
+DCF77 DCF = DCF77(DCF_PIN, DCF_INTERRUPT);
 
 int data = 12;    // 8, DIN pin of MAX7219 module
 int load = 11;    // 9, CS pin of MAX7219 module
@@ -37,56 +31,40 @@ char string1[] = "00:00 -99C    ";
 
 OneWire oneWire(3);
 signed char temperature;
- 
+
 // Pass our oneWire reference to Dallas Temperature.
 DallasTemperature sensors(&oneWire);
 
+void readTime(byte *minutes, byte *hours) {
+  time_t DCFtime = DCF.getTime(); // Check if new DCF77 time is available
+  if (DCFtime != 0)
+  {
+    setTime(DCFtime);
+    hours = hour();
+    minutes = minute();
+  } else {
+    minutes = 0;
+    hours = 0;
+  }
+}
 void setup() {
-  My_Receiver.enableIRIn();
-
   mm.init(); // module initialize
   mm.setIntensity(1); // dot matix intensity 0-15
   mm.clear();
 
-  mode = M_SETUP;
-  valueSetup = S_HOURS;
-
   Wire.begin();
   sensors.begin();
+
+  DCF.Start();
 }
 
 void loop() {
-  if (mode == M_CLOCK) {
-    modeClock();
-  } else {
-    modeSetup();
+  time_t DCFtime = DCF.getTime(); // Check if new DCF77 time is available
+  if (DCFtime != 0)
+  {
+    setTime(DCFtime);
   }
-}
-
-bool buttonPressed() {
-  if (My_Receiver.GetResults(&My_Decoder)) {
-    My_Receiver.resume();
-    My_Decoder.decode();
-
-    switch (My_Decoder.value) {
-      case VOL_UP: {
-          if (valueSetup == S_HOURS) {
-            hours++;
-          } else if (valueSetup == S_MINUTES) {
-            minutes++;
-          }
-        } break;//UP
-      case VOL_DOWN: {
-          if (valueSetup == S_HOURS) {
-            hours--;
-          } else if (valueSetup == S_MINUTES) {
-            minutes--;
-          }
-        } break;//DOWN
-      case RETURN: return true; //SETUP
-    }
-  }
-  return false;
+  modeClock();
 }
 
 void updateDisplay() {
@@ -101,7 +79,7 @@ void updateDisplay() {
   string1[3] = m1 + '0';
   string1[4] = m2 + '0';
 
-  if(temperature < 0){
+  if (temperature < 0) {
     string1[6] = '-';
     temperature *= -1;
   } else {
@@ -117,56 +95,16 @@ void updateDisplay() {
 
 void modeClock() {
   delay(4000);
-  readDS3231time(&minutes, &hours);
+  readTime(&minutes, &hours);
   readTemp(&temperature);
   updateDisplay();
   mm.shiftLeft(false, true);
   printStringWithShift(string1, 75);
 }
 
-void readTemp(signed char *temp){
+void readTemp(signed char *temp) {
   sensors.requestTemperatures();
   *temp = (signed char) sensors.getTempCByIndex(0);
-}
-
-void modeSetup() {
-  if (buttonPressed()) {
-    if (valueSetup == S_HOURS) {
-      valueSetup = S_MINUTES;
-    } else if (valueSetup == S_MINUTES) {
-      mode = M_CLOCK;
-      valueSetup = S_HOURS;
-      setDS3231time(minutes, hours);
-    }
-  } 
-
-  if (minutes == 60) {
-    minutes = 0;
-  }
-
-  if (minutes == 255) {
-    minutes = 59;
-  }
-
-  if (hours == 24) {
-    hours = 0;
-  }
-
-  if (hours == 255) {
-    hours = 23;
-  }
-
-  updateDisplay();
-
-  if (valueSetup == S_HOURS) {
-    printChar(string1[0], 0);
-    printChar(string1[1], 4);
-    mm.setDot(0, 7, 1);
-    mm.setDot(7, 7, 1);
-  } else if (valueSetup == S_MINUTES) {
-    printChar(string1[3], 0);
-    printChar(string1[4], 4);
-  }
 }
 
 void printChar(char c, byte x) {
